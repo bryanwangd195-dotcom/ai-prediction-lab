@@ -25,7 +25,7 @@ main{display:grid;grid-template-columns:minmax(0,1.78fr) minmax(330px,1fr);gap:1
 .deck{margin-bottom:13px;background:#FFFFFF}.deck>summary{font-weight:800;cursor:pointer}.deck:not([open]) .when-open,.deck[open] .when-closed{display:none}.deck-player{margin-top:9px;min-width:0;padding:10px;background:#10243A;color:#F5F7FA;border:4px double #DCE4EC;border-radius:14px 9px 16px 10px;background-image:radial-gradient(#A9D7F00C .65px,transparent .85px);background-size:5px 5px}.deck-player:fullscreen{width:100%;height:100%;margin:0;padding:clamp(10px,3vw,40px);overflow:auto;border-radius:0}.deck-nav{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:space-between;border-bottom:1px dashed #43617B;padding-bottom:9px}.deck-nav div{display:flex;gap:6px;flex-wrap:wrap}.deck-player button{background:#1A3550;border-color:#64839F;color:#F5F7FA}.deck-player button:hover{background:#294864}.deck-progress{display:flex;gap:8px;align-items:center;color:#67D7E2;font-weight:800}.deck-progress progress{width:clamp(60px,12vw,160px);accent-color:#67D7E2}.slide{max-width:1280px;margin:auto;padding:clamp(15px,3vw,42px);min-height:350px}.slide h2{font-size:clamp(1.55rem,3.5vw,3.25rem);line-height:1.16;margin:5px 0 11px}.slide-kicker{color:#67D7E2;font-weight:800;margin:0}.slide-lead{font-size:clamp(1.02rem,1.75vw,1.52rem);margin:0 0 12px;color:#E4EDF6}.slide-items{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,245px),1fr));gap:10px}.slide-card{padding:12px;border:2px solid #A0B7CC;border-radius:9px 15px 8px 12px;background:#172F47}.slide-card:nth-child(2){border-color:#A0B7CC}.slide-card:nth-child(3){border-color:#A0B7CC}.slide-card h3{color:#67D7E2;font-size:clamp(1rem,1.65vw,1.38rem);margin:0 0 5px}.slide-card p{font-size:clamp(.97rem,1.42vw,1.2rem);margin:0}.slide-ref{font-size:.92rem;color:#CADBEA;margin:12px 0 0}.slide-figure{margin:12px 0;max-width:660px}.slide-figure svg{display:block;width:100%;max-height:130px}.slide-figure figcaption{color:#CADBEA;font-size:.94rem}.slide .slide-action{margin-top:12px;background:#087F8C;color:#FFFFFF;border-color:#67D7E2}.slide .slide-action:hover{background:#076F7A}.slide-action[hidden],.slide-figure:empty{display:none}#lab{scroll-margin-top:10px}
 @media(max-width:650px){.slide{padding:12px 3px}.deck-nav button{padding:.3rem}.deck-player:fullscreen .promo-dock{width:min(280px,calc(100vw - 20px))}}
 h1,h2,h3{color:var(--heading)}.slide h2{color:#F5F7FA}.deck-player:focus-visible{outline-color:var(--accent)}
-[hidden]{display:none!important}.lab-heading{margin:18px 0 8px}.lab-heading h2{margin:0;font-size:1.45rem}.lab-heading p{margin:4px 0;color:var(--muted)}.lab-workflow{display:grid;gap:12px}.lab-workflow h3{margin:0 0 7px}.lab-workflow p{margin:5px 0}.lab-workflow textarea{display:block;width:100%;min-height:155px;resize:vertical;padding:9px;background:#F5F7FA;color:var(--ink);border:1px solid var(--violet);border-radius:8px;font:inherit;font-family:monospace}.lab-tools{display:flex;gap:8px;margin:8px 0}.lab-workflow .primary{background:#087F8C;color:white;border-color:#087F8C}.lab-results{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(250px,1fr);gap:12px}.lab-plot{display:block;width:100%;height:auto;max-height:470px}.actual-series i{border-bottom-style:dashed}.lab-feedback{font-weight:700;color:var(--muted)}.lab-feedback[data-error=true]{color:#9A3412}.lab-workflow :focus-visible{outline-offset:2px}@media(max-width:940px){.lab-results{grid-template-columns:minmax(0,1fr)}}
+.lab-heading{margin:18px 0 8px}.lab-heading h2{margin:0;font-size:1.45rem}.lab-heading p{margin:4px 0;color:var(--muted)}.data-dialog{width:min(680px,calc(100% - 28px));max-height:calc(100dvh - 28px);color:var(--ink);padding:18px}.data-dialog::backdrop{background:#10243A88}.data-dialog h2{margin:0 0 6px}.data-dialog textarea{display:block;width:100%;min-height:190px;resize:vertical;padding:9px;background:#F5F7FA;color:var(--ink);border:1px solid var(--violet);border-radius:8px;font:inherit;font-family:monospace}.data-dialog-actions{display:flex;justify-content:flex-end;gap:8px}.data-dialog .primary{background:#087F8C;color:white;border-color:#087F8C}.lab-feedback{color:#9A3412;font-weight:700}.data table td{white-space:nowrap}
 </style>
 </head>
 <body><div class="shell">
@@ -62,7 +62,6 @@ h1,h2,h3{color:var(--heading)}.slide h2{color:#F5F7FA}.deck-player:focus-visible
 </section>
 <aside aria-label="案例講解與資料">
 <section class="panel problem"><h2>先請大家猜</h2><p id="question"></p><details class="answer" id="reveal"><summary>做完示範，再揭曉</summary><p id="explanation"></p></details></section>
-<div id="presetNetworkSlot" hidden></div>
 <section class="panel network" id="sharedNetwork"><h2>類神經網路怎麼搭？</h2>
 <div class="network-controls">
 <label>隱藏層 <select id="depth"><option value="1">1 層</option><option value="2">2 層</option><option value="3">3 層</option></select></label>
@@ -73,21 +72,15 @@ h1,h2,h3{color:var(--heading)}.slide h2{color:#F5F7FA}.deck-player:focus-visible
 <p class="note" id="trainingProgress">訓練進度 0 / 10,000 輪</p></section>
 <section class="panel data"><h2>我們手上有什麼資料？</h2><p id="source" class="source"></p><div class="table-frame" id="tableFrame" tabindex="0" role="region" aria-label="可捲動的教學資料表"><table aria-label="目前圖中的資料"><thead><tr><th scope="col">筆</th><th scope="col" id="xcol"></th><th scope="col" id="ycol"></th></tr></thead><tbody id="rows"></tbody></table></div><p class="note">往下捲動表格可看其餘資料。</p></section>
 </aside></main>
-<div id="customLab" class="lab-workflow" hidden>
-<section class="panel"><h3>貼上資料</h3>
-<p class="note">可貼上 Excel 或 CSV。第一列為欄名，最後一欄為目標，其餘為數值因子。圖表按貼上的列順序繪製。</p>
-<label for="csvInput">資料表</label><textarea id="csvInput" spellcheck="false"></textarea>
-<div class="lab-tools"><button id="readCsv" class="primary">讀取資料</button></div>
-<p id="csvFeedback" class="lab-feedback" role="status"></p>
 </section>
-<div class="lab-results">
-<section class="panel"><h3>實際值與預測走勢</h3><p id="comparisonTarget" class="note">讀取資料後顯示走勢。</p>
-<svg id="predictionPlot" class="lab-plot" viewBox="0 0 620 340" role="img" aria-label="按資料順序顯示實際值與模型預測走勢"></svg>
-<div class="legend"><span class="actual-series"><i></i>實際值</span><span class="blue"><i></i>迴歸模型</span><span class="orange"><i></i>類神經網路</span><span>虛線右側為測試資料</span></div>
-<div class="scores"><div class="score blue"><small>迴歸模型 · 測試 RMSE</small><strong id="customLinearScore">—</strong></div><div class="score orange"><small>類神經網路 · 測試 RMSE</small><strong id="customNetworkScore">—</strong></div></div>
-<p id="customTraining" class="lab-feedback" role="status"></p>
-</section><div id="customNetworkSlot"></div>
-</div></div></section>
+<dialog id="dataDialog" class="panel data-dialog" aria-labelledby="dataDialogTitle">
+<form id="dataForm">
+<h2 id="dataDialogTitle">貼上資料</h2>
+<p class="note">可貼上 Excel 或 CSV。第一列為欄名，最後一欄為目標，其餘為數值因子。圖表按資料列順序繪製。</p>
+<label for="csvInput">資料表</label><textarea id="csvInput" spellcheck="false" autofocus></textarea>
+<p id="csvFeedback" class="lab-feedback" role="status"></p>
+<div class="data-dialog-actions"><button type="button" id="cancelData">取消</button><button type="submit" id="readCsv" class="primary">讀取資料</button></div>
+</form></dialog>
 <section class="panel book-card" aria-labelledby="bookTitle">
 <h2 id="bookTitle">書中實務案例對照</h2>
 <p class="note">畫布為模擬資料。以下標出教材案例與可搭配的練習。</p>
@@ -284,7 +277,11 @@ function normal(random) {
 const midpoint = ([low,high]) => (low+high)/2;
 const halfRange = ([low,high]) => (high-low)/2;
 function load(key) {
-  if(!$('customLab').hidden) showPresetLab();
+  if(imported){
+    imported=null;
+    $('myData').setAttribute('aria-pressed','false');
+    refreshNetworkInputs();
+  }
   preset = sets[key];
   renderBookCases(preset.bookCases);
   isSandbox = false;
@@ -319,6 +316,11 @@ function fitLinear(data, lambda) {
   return {w,b:meanY-w*meanX};
 }
 function refit(animate=false) {
+  if(imported){
+    motion=null;
+    line=linearOn?fitImported():null;
+    return;
+  }
   const next=linearOn ? fitLinear(points,0) : null;
   motion=animate && next && !reducedMotion.matches
     ? {from:displayLine(performance.now()) || {w:0,b:midpoint(preset.y)},start:performance.now()} : null;
@@ -422,7 +424,7 @@ const MAX_EPOCH=10000;
 let widths=[16,8,8];
 function activeWidths(){return widths.slice(0,Number($('depth').value));}
 function newNetwork(){
-  net=initialize(activeWidths(),$('activation').value,rng(seed++));
+  net=initialize(activeWidths(),$('activation').value,rng(seed++),customFactorCount());
 }
 function svgElement(name,attributes){
   const el=document.createElementNS('http://www.w3.org/2000/svg',name);
@@ -605,7 +607,6 @@ function configurationChanged(){
   net=null;
   drawNetwork();
   updateCode();
-  if(!$('customLab').hidden){trainCustom();return;}
   requestDraw();
 }
 function buildNetworkBoard(){
@@ -635,7 +636,8 @@ const scaledX=x=>(x-midpoint(preset.x))/halfRange(preset.x);
 const unscaleY=y=>midpoint(preset.y)+halfRange(preset.y)*y;
 function updateData() {
   tableDirty=true;
-  trainingData=points.map(({x,y})=>({x:scaledX(x),y:(y-midpoint(preset.y))/halfRange(preset.y)}));
+  if(imported) rebuildImportedTraining();
+  else trainingData=points.map(({x,y})=>({x:scaledX(x),y:(y-midpoint(preset.y))/halfRange(preset.y)}));
   if(points.length<2) running=false;
   refit();
   requestDraw();
@@ -653,9 +655,17 @@ function put(id,text){
 function updateTable(){
   const rows=$('rows');
   const fragment=document.createDocumentFragment();
+  document.querySelectorAll('.imported-factor').forEach(cell=>cell.remove());
+  if(imported){
+    for(const name of imported.columns.slice(0,-1)){
+      const cell=document.createElement('th');
+      cell.scope='col';cell.className='imported-factor';cell.textContent=name;
+      $('ycol').before(cell);
+    }
+  }
   for(const [index,point] of points.entries()){
     const row=document.createElement('tr');
-    for(const value of [String(index+1),fmt(point.x),fmt(point.y)]){
+    for(const value of [String(index+1),fmt(point.x),...(point.factors||[]).map(String),fmt(point.y)]){
       const cell=document.createElement('td');
       cell.textContent=value;
       row.append(cell);
@@ -665,7 +675,7 @@ function updateTable(){
   if(!points.length){
     const row=document.createElement('tr');
     const cell=document.createElement('td');
-    cell.colSpan=3;
+    cell.colSpan=3+(imported?customFactorCount():0);
     cell.textContent='目前沒有資料，點圖表可以加資料。';
     row.append(cell);
     fragment.append(row);
@@ -673,22 +683,24 @@ function updateTable(){
   rows.replaceChildren(fragment);
 }
 function updateUi() {
-  const linearError=line ? rmse(points,x=>line.w*x+line.b) : null;
-  const networkError=net?.epoch ? rmse(points,x=>unscaleY(predict(net,scaledX(x)))) : null;
+  const linearError=imported?importedScore(line):line ? rmse(points,x=>line.w*x+line.b) : null;
+  const networkError=imported?importedScore(importedNetworkPrediction):net?.epoch ? rmse(points,x=>unscaleY(predict(net,scaledX(x)))) : null;
   put('plotTitle',isSandbox?'你的自訂資料':preset.title);
-  put('dataset',points.length+' 筆 · 教學模擬');
+  put('dataset',points.length+(imported?' 筆 · 已匯入':' 筆 · 教學模擬'));
   put('question',preset.question);
   put('explanation',preset.explanation);
-  put('source',isSandbox?'每一列都是你在圖上放入的點。橫軸與縱軸沿用剛才案例的單位。':preset.source);
+  put('source',isSandbox&&!imported?'每一列都是你在圖上放入的點。橫軸與縱軸沿用剛才案例的單位。':preset.source);
   put('xcol',preset.xl);put('ycol',preset.yl);
   if(tableDirty){updateTable();tableDirty=false;}
   put('train',running?'暫停訓練':net?.epoch>=MAX_EPOCH?'重新訓練':net?.epoch?'繼續訓練':'讓神經網路試試');
-  if($('customLab').hidden) put('trainingProgress','訓練進度 '+(net?.epoch||0).toLocaleString('zh-TW')+' / 10,000 輪'+(net?.epoch>=MAX_EPOCH?'（已完成）':''));
-  put('lrmse',linearError==null?'—':fmt(linearError,4)+' '+preset.unit);
-  put('nrmse',networkError==null?'—':fmt(networkError,4)+' '+preset.unit);
+  put('trainingProgress','訓練進度 '+(net?.epoch||0).toLocaleString('zh-TW')+' / 10,000 輪'+(net?.epoch>=MAX_EPOCH?'（已完成）':''));
+  const unit=preset.unit?' '+preset.unit:'';
+  put('lrmse',linearError==null?'—':fmt(linearError,4)+unit);
+  put('nrmse',networkError==null?'—':fmt(networkError,4)+unit);
   let message='先猜答案，再按「畫出預測直線」。';
   if(line) message='看看綠色短線：哪一筆最沒猜準？';
   if(networkError!=null) message='比較藍線和橘線：在哪些地方差最多？';
+  if(imported && points.length>=2) message='按資料順序顯示走勢。RMSE 以 '+points.filter(point=>point.test).length+' 筆測試資料計算。';
   if(points.length<2) message='先在圖上加入至少 2 個點。';
   put('message',notice||message);
   $('custom').disabled=!points.some(p=>p.custom);
@@ -734,14 +746,15 @@ function draw(now) {
     const x=l+(r-l)*i/5;
     stroke(x,t,x,b);
     ctx.textAlign='center';
-    ctx.fillText(String(preset.x[0]+(preset.x[1]-preset.x[0])*i/5),x,b+17);
+    const value=preset.x[0]+(preset.x[1]-preset.x[0])*i/5;
+    ctx.fillText(imported?String(Math.round(value)):String(value),x,b+17);
   }
   for(let i=0;i<=6;i++){
     const y=b-(b-t)*i/6;
     stroke(l,y,r,y);
     ctx.textAlign='right';
     const value=preset.y[0]+(preset.y[1]-preset.y[0])*i/6;
-    ctx.fillText(Number.isInteger(value)?value:value.toFixed(0),l-9,y+4);
+    ctx.fillText(imported?Number(value.toPrecision(4)):Number.isInteger(value)?value:value.toFixed(0),l-9,y+4);
   }
   ctx.strokeStyle='#334155'; ctx.lineWidth=2.1;
   stroke(l,b,r,b); stroke(l,b,l,t);
@@ -754,14 +767,15 @@ function draw(now) {
   ctx.textAlign='left';ctx.fillText(preset.yl,l,20);
   ctx.textAlign='right';ctx.fillText(preset.xl,r,h-8);
   ctx.save();ctx.beginPath();ctx.rect(l-7,t-7,r-l+14,b-t+14);ctx.clip();
-  const fit=displayLine(now);
+  const fit=imported?null:displayLine(now);
   if(fit && $('residual').checked){
     ctx.strokeStyle='#307a52';ctx.lineWidth=1.65;ctx.setLineDash([5,5]);
     for(const p of points) stroke(px(p.x),py(p.y),px(p.x),py(fit.w*p.x+fit.b));
     ctx.setLineDash([]);
   }
   if(fit) curve(x=>fit.w*x+fit.b,'#2563EB',4);
-  if(net?.epoch&&points.length>=2) curve(x=>unscaleY(predict(net,scaledX(x))),'#B45309',4);
+  if(imported) drawImportedSeries();
+  else if(net?.epoch&&points.length>=2) curve(x=>unscaleY(predict(net,scaledX(x))),'#B45309',4);
   for(const p of points){
     const x=px(p.x),y=py(p.y);
     ctx.beginPath();ctx.arc(x,y,6.7,0,2*Math.PI);ctx.fillStyle='#b73927';ctx.fill();
@@ -820,7 +834,7 @@ canvas.addEventListener('pointerdown',event=>{
     drag={point:hit,id:event.pointerId};
     canvas.setPointerCapture(event.pointerId);
   } else if(p.x>=view.l&&p.x<=view.r&&p.y>=view.t&&p.y<=view.b){
-    points.push({...coords(p),custom:true});updateData();
+    addPoint(coords(p));updateData();
   }
 });
 canvas.addEventListener('contextmenu',event=>event.preventDefault());
@@ -836,8 +850,8 @@ $('outlier').onclick=()=>{
   notice='';
   const index=points.filter(p=>p.outlier).length;
   const fraction=.96-.04*(index%6);
-  points.push({x:preset.x[0]+fraction*(preset.x[1]-preset.x[0]),
-    y:preset.y[0]+(.06+.035*(index%5))*(preset.y[1]-preset.y[0]),custom:true,outlier:true});
+  addPoint({x:preset.x[0]+fraction*(preset.x[1]-preset.x[0]),
+    y:preset.y[0]+(.06+.035*(index%5))*(preset.y[1]-preset.y[0]),outlier:true});
   updateData();
 };
 $('custom').onclick=()=>{notice='';points=points.filter(p=>!p.custom);updateData();};
@@ -861,7 +875,7 @@ $('clear').onclick=()=>{
 $('fit').onclick=()=>{notice='';linearOn=points.length>=2;refit(true);requestDraw();};
 $('train').onclick=()=>{
   notice='';
-  if(points.length>=2){
+  if(points.length>=2 && trainingData.length){
     if(!net || net.epoch>=MAX_EPOCH) newNetwork();
     running=!running;
   }
@@ -869,7 +883,7 @@ $('train').onclick=()=>{
 };
 $('reset').onclick=()=>{
   notice='';
-  if(points.length>=2){newNetwork();running=true;requestDraw();}
+  if(points.length>=2 && trainingData.length){newNetwork();running=true;requestDraw();}
 };
 $('residual').onchange=requestDraw;
 $('depth').onchange=()=>{buildNetworkBoard();configurationChanged();};
@@ -1010,38 +1024,15 @@ const exampleData=[
     return [a,b,c,target].join(',');
   })
 ].join('\n');
-let imported=null, customRun=0;
+let imported=null;
 $('csvInput').value=exampleData;
-function customFactorCount(){
-  return !$('customLab').hidden && imported ? imported.columns.length-1 : 1;
-}
-function refreshCustomNetwork(){
+function customFactorCount(){return imported?imported.columns.length-1:1;}
+function refreshNetworkInputs(){
   buildNetworkBoard();
   drawNetwork();
-  put('networkInputNote',$('customLab').hidden
-    ? '每次輸入一個數字，輸出一個預測。超過四個節點時用省略號表示。'
-    : '每個因子各用一個輸入節點。超過四個節點時用省略號表示。');
-}
-function showPresetLab(){
-  customRun++;
-  $('myData').setAttribute('aria-pressed','false');
-  $('customLab').hidden=true;
-  $('presetLab').hidden=false;
-  $('bookTitle').closest('section').hidden=false;
-  $('presetNetworkSlot').after($('sharedNetwork'));
-  refreshCustomNetwork();
-}
-function showCustomLab(){
-  running=false;
-  $('myData').setAttribute('aria-pressed','true');
-  document.querySelectorAll('[data-set]').forEach(button=>button.setAttribute('aria-pressed','false'));
-  $('presetLab').hidden=true;
-  $('customLab').hidden=false;
-  $('bookTitle').closest('section').hidden=true;
-  $('customNetworkSlot').append($('sharedNetwork'));
-  refreshCustomNetwork();
-  if(imported) trainCustom();
-  else put('trainingProgress','讀取資料後自動訓練。');
+  put('networkInputNote',imported
+    ? '每個因子各用一個輸入節點。超過四個節點時用省略號表示。'
+    : '每次輸入一個數字，輸出一個預測。超過四個節點時用省略號表示。');
 }
 function splitDataLine(line,separator,lineNumber){
   if(!line.includes('"')) return line.split(separator).map(value=>value.trim());
@@ -1113,123 +1104,106 @@ function fitRanges(rows,index){
   const values=rows.map(row=>row[index]),min=Math.min(...values),max=Math.max(...values);
   return {min,max,center:(min+max)/2,scale:(max-min)/2||1};
 }
-function customMessage(id,message,error=false){
-  $(id).dataset.error=String(error);
-  put(id,message);
+function addPoint(point){
+  if(imported){
+    // A click supplies only a target and a position. Use the closest row's factors.
+    const nearest=(points.length?points:originalPoints).reduce((a,b)=>Math.abs(a.x-point.x)<=Math.abs(b.x-point.x)?a:b);
+    point.factors=nearest.factors.slice();
+    point.test=nearest.test;
+    notice='新資料點沿用最接近一列的因子值。';
+  }
+  points.push({...point,custom:true});
 }
-function clearCustomResults(){
-  customRun++;
-  for(const id of ['customLinearScore','customNetworkScore']) put(id,'—');
-  $('predictionPlot').replaceChildren();
-  customMessage('customTraining','');
-  put('trainingProgress','讀取資料後自動訓練。');
+function rebuildImportedTraining(){
+  points.sort((a,b)=>a.x-b.x);
+  trainingData=points.filter(point=>!point.test).map(({factors,y})=>({
+    x:imported.normalize(factors),y:(y-imported.output.center)/imported.output.scale
+  }));
+  if(!trainingData.length) running=false;
+}
+function fitImported(){
+  const fit=trainingData.length>customFactorCount()?trainLinearFactors(trainingData,customFactorCount()):null;
+  if(!fit && !notice) notice='訓練資料不足或因子共線，無法求得唯一的迴歸解。';
+  return fit && (point=>fit(imported.normalize(point.factors))*imported.output.scale+imported.output.center);
+}
+function importedNetworkPrediction(point){
+  if(!net?.epoch || !trainingData.length) return NaN;
+  return predict(net,imported.normalize(point.factors))*imported.output.scale+imported.output.center;
+}
+function importedScore(predictPoint){
+  const heldOut=points.filter(point=>point.test);
+  if(!predictPoint || !heldOut.length) return null;
+  const result=Math.sqrt(heldOut.reduce((sum,point)=>sum+(predictPoint(point)-point.y)**2,0)/heldOut.length);
+  return Number.isFinite(result)?result:null;
+}
+function drawImportedSeries(){
+  if(!points.length) return;
+  function trace(predictPoint,color,width,dash=[]){
+    ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash(dash);ctx.beginPath();
+    let begin=true;
+    for(const point of points){
+      const y=predictPoint(point);
+      if(!Number.isFinite(y)){begin=true;continue;}
+      if(begin) ctx.moveTo(px(point.x),py(y));
+      else ctx.lineTo(px(point.x),py(y));
+      begin=false;
+    }
+    ctx.stroke();ctx.setLineDash([]);
+  }
+  if(points.some(point=>point.test)){
+    const edge=px(imported.testBoundary);
+    ctx.lineWidth=1;ctx.strokeStyle='#94A3B8';ctx.setLineDash([5,5]);
+    stroke(edge,view.t,edge,view.b);ctx.setLineDash([]);
+  }
+  trace(point=>point.y,'#64748B',2);
+  if(line){
+    if($('residual').checked){
+      ctx.strokeStyle='#307a52';ctx.lineWidth=1.65;ctx.setLineDash([5,5]);
+      for(const point of points) stroke(px(point.x),py(point.y),px(point.x),py(line(point)));
+      ctx.setLineDash([]);
+    }
+    trace(line,'#2563EB',4);
+  }
+  if(net?.epoch) trace(importedNetworkPrediction,'#B45309',4);
 }
 function readCustomData(){
-  clearCustomResults();
-  try{
-    imported=parseCustomData($('csvInput').value);
-    refreshCustomNetwork();
-    customMessage('csvFeedback','已讀取 '+imported.rows.length+' 筆資料。預設最後一欄為目標，其餘欄位為因子。');
-    put('comparisonTarget','目標：'+imported.columns.at(-1)+' · 按資料列順序');
-    trainCustom();
-  }catch(error){
-    imported=null;
-    refreshCustomNetwork();
-    put('comparisonTarget','讀取資料後顯示走勢。');
-    customMessage('csvFeedback',error.message,true);
-  }
-}
-function drawCustomPlot(actual,series,testStart){
-  const svg=$('predictionPlot');
-  svg.replaceChildren();
-  const values=[...actual,...series.flatMap(({predicted})=>predicted)];
-  const head=Math.max(...values),base=Math.min(...values);
-  const padding=(head-base||1)*.06,min=base-padding,max=head+padding;
-  const px=index=>73+506*index/(actual.length-1);
-  const py=value=>282-245*(value-min)/(max-min);
-  const path=(d,stroke,width=1,dash='')=>svg.append(svgElement('path',{d,stroke,fill:'none','stroke-width':width,'stroke-dasharray':dash,'stroke-linejoin':'round'}));
-  const label=(x,y,name,anchor='middle')=>{
-    const text=svgElement('text',{x,y,fill:'#334155','font-size':14,'text-anchor':anchor});
-    text.textContent=name;svg.append(text);
+  let data;
+  try{data=parseCustomData($('csvInput').value);}
+  catch(error){put('csvFeedback',error.message);return;}
+  const {columns,rows}=data;
+  const width=columns.length-1,train=rows.slice(0,rows.length-Math.ceil(rows.length*.25));
+  const ranges=Array.from({length:width},(_,i)=>fitRanges(train,i));
+  imported={columns,testBoundary:train.length+.5,output:fitRanges(train,width),
+    normalize:values=>values.map((value,i)=>(value-ranges[i].center)/ranges[i].scale)};
+  const {min,max}=fitRanges(rows,width),padding=(max-min||Math.max(Math.abs(min)*.1,1))*.12;
+  preset={
+    x:[1,rows.length],y:[min-padding,max+padding],xl:'資料列順序',yl:columns[width],
+    title:'我的資料 · '+columns[width],
+    question:'沿著資料列順序看，哪一段的實際值變化最大？',
+    explanation:'按原本的兩個模型按鈕，觀察藍色迴歸線與橘色神經網路線怎麼跟上實際值。',
+    source:'已讀取 '+rows.length+' 筆資料。預設最後一欄為目標，其餘欄位為因子。'
   };
-  for(let i=0;i<5;i++){
-    const value=min+(max-min)*i/4,y=py(value);
-    path('M 73 '+y+' H 579','#DCE4EC');
-    label(67,y+4,Number(value.toPrecision(4)).toString(),'end');
-  }
-  path('M 73 31 V 282 H 579','#526479');
-  const splitX=px(testStart-.5);
-  path('M '+splitX+' 29 V 282','#526479',1,'5 4');
-  label(splitX-6,22,'訓練','end');
-  label(splitX+6,22,'測試','start');
-  for(const index of new Set([0,Math.round((actual.length-1)/2),actual.length-1])) label(px(index),306,String(index+1));
-  label(326,330,'資料列順序');
-  const lines=[{color:'#334155',predicted:actual,dash:'4 3'},...series];
-  for(const {color,predicted,dash} of lines){
-    const coordinates=predicted.map((value,i)=>px(i).toFixed(2)+' '+py(value).toFixed(2));
-    path('M '+coordinates.join(' L '),color,2.45,dash);
-  }
+  points=rows.map((row,i)=>({x:i+1,y:row[width],factors:row.slice(0,width),test:i>=train.length,custom:false}));
+  originalPoints=points.map(point=>({...point}));
+  drag=null;linearOn=false;line=motion=net=null;running=false;isSandbox=false;notice='';
+  $('reveal').open=false;
+  $('tableFrame').scrollTop=0;
+  $('myData').setAttribute('aria-pressed','true');
+  document.querySelectorAll('[data-set]').forEach(button=>button.setAttribute('aria-pressed','false'));
+  renderBookCases([
+    ['《現代 AI 全景聖經》第 5 章 §5.1.1','使用多個數值因子估計同一個目標。','練習：比較迴歸模型在訓練與測試資料上的表現。'],
+    ['《現代 AI 全景聖經》第 8 章 §§8.1.2、8.1.4','以多層感知機擬合數值目標。','練習：調整隱藏層節點數，觀察測試 RMSE。']
+  ]);
+  refreshNetworkInputs();
+  updateData();
+  $('dataDialog').close();
 }
-function renderCustomResults(state,includeNetwork){
-  const actual=state.rows.map(row=>row.y),series=[];
-  const candidates=[[state.linear,'customLinearScore','#2563EB']];
-  if(includeNetwork) candidates.push([state.networkPredict,'customNetworkScore','#B45309']);
-  for(const [predict,id,color] of candidates){
-    if(!predict) continue;
-    const predicted=state.rows.map(row=>predict(row.x));
-    if(!predicted.every(Number.isFinite)) continue;
-    const squared=predicted.slice(state.testStart).reduce((sum,value,i)=>sum+(value-actual[state.testStart+i])**2,0);
-    put(id,fmt(Math.sqrt(squared/(actual.length-state.testStart)),4));
-    series.push({color,predicted});
-  }
-  drawCustomPlot(actual,series,state.testStart);
-}
-function trainCustom(){
-  if(!imported || $('customLab').hidden) return;
-  clearCustomResults();
-  const {rows,columns}=imported;
-  const count=columns.length-1;
-  const testStart=rows.length-Math.max(2,Math.ceil(rows.length*.25));
-  const train=rows.slice(0,testStart);
-  const ranges=Array.from({length:count},(_,i)=>fitRanges(train,i)),output=fitRanges(train,count);
-  const normalize=values=>values.map((value,i)=>(value-ranges[i].center)/ranges[i].scale);
-  const denormalize=value=>value*output.scale+output.center;
-  const samples=rows.map(row=>({x:row.slice(0,count),y:row[count]}));
-  const training=samples.slice(0,testStart).map(({x,y})=>({x:normalize(x),y:(y-output.center)/output.scale}));
-  const linear=train.length>count?trainLinearFactors(training,count):null;
-  const network=initialize(activeWidths(),$('activation').value,rng(1129),count);
-  const state={
-    rows:samples,testStart,
-    linear:linear?values=>denormalize(linear(normalize(values))):null,
-    networkPredict:values=>denormalize(predict(network,normalize(values)))
-  };
-  renderCustomResults(state,false);
-  customMessage('customTraining',linear?'前 '+testStart+' 筆訓練，後 '+(rows.length-testStart)+' 筆測試。':'訓練資料不足或因子共線，無法求得唯一的線性迴歸解。',!linear);
-  const run=customRun,epochs=1000;
-  function batch(){
-    if(run!==customRun) return;
-    const start=performance.now();
-    do{step(network,training,.01);}
-    while(network.epoch<epochs && performance.now()-start<8);
-    if(!network.layers.every(layer=>layer.weights.every(Number.isFinite))){
-      put('trainingProgress','神經網路訓練中斷。');
-      return;
-    }
-    put('trainingProgress','訓練進度 '+network.epoch.toLocaleString('zh-TW')+' / 1,000 輪'+(network.epoch===epochs?'（已完成）':''));
-    if(network.epoch<epochs) requestAnimationFrame(batch);
-    else renderCustomResults(state,true);
-  }
-  requestAnimationFrame(batch);
-}
-$('myData').onclick=showCustomLab;
-$('readCsv').onclick=readCustomData;
-$('csvInput').oninput=()=>{
-  imported=null;
-  clearCustomResults();
-  refreshCustomNetwork();
-  put('comparisonTarget','讀取資料後顯示走勢。');
-  customMessage('csvFeedback','資料已變更，請按「讀取資料」。');
+$('myData').onclick=()=>{
+  put('csvFeedback','');
+  $('dataDialog').showModal();
 };
+$('dataForm').onsubmit=event=>{event.preventDefault();readCustomData();};
+$('cancelData').onclick=()=>$('dataDialog').close();
 renderSlide();
 load('housing');
 buildNetworkBoard();
