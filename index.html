@@ -386,7 +386,7 @@ function forward(model,x) {
 function predict(model,x) {
   return forward(model,x);
 }
-function step(model,data,rate) {
+function step(model,data,rate,penalty=0) {
   const {layers,type}=model;
   for(const layer of layers) layer.g.fill(0);
   const scale=2/data.length;
@@ -412,8 +412,9 @@ function step(model,data,rate) {
   }
   model.epoch++;
   const bias1=1-.9**model.epoch, bias2=1-.999**model.epoch;
-  for(const {weights,g,m,v} of layers){
+  for(const {weights,g,m,v,stride,input} of layers){
     for(let j=0;j<weights.length;j++){
+      if(penalty && j%stride!==input) g[j]+=penalty*weights[j];
       m[j]=.9*m[j]+.1*g[j];
       v[j]=.999*v[j]+.001*g[j]*g[j];
       weights[j]-=rate*(m[j]/bias1)/(Math.sqrt(v[j]/bias2)+1e-8);
@@ -424,7 +425,8 @@ const MAX_EPOCH=10000;
 let widths=[16,8,8];
 function activeWidths(){return widths.slice(0,Number($('depth').value));}
 function newNetwork(){
-  net=initialize(activeWidths(),$('activation').value,rng(seed++),customFactorCount());
+  net=initialize(activeWidths(),$('activation').value,rng(imported?1129:seed++),customFactorCount());
+  if(imported) net.validation={best:Infinity,epoch:0,weights:null,finished:false};
 }
 function svgElement(name,attributes){
   const el=document.createElementNS('http://www.w3.org/2000/svg',name);
@@ -692,15 +694,17 @@ function updateUi() {
   put('source',isSandbox&&!imported?'每一列都是你在圖上放入的點。橫軸與縱軸沿用剛才案例的單位。':preset.source);
   put('xcol',preset.xl);put('ycol',preset.yl);
   if(tableDirty){updateTable();tableDirty=false;}
-  put('train',running?'暫停訓練':net?.epoch>=MAX_EPOCH?'重新訓練':net?.epoch?'繼續訓練':'讓神經網路試試');
-  put('trainingProgress','訓練進度 '+(net?.epoch||0).toLocaleString('zh-TW')+' / 10,000 輪'+(net?.epoch>=MAX_EPOCH?'（已完成）':''));
+  const complete=net?.validation?.finished || net?.epoch>=MAX_EPOCH;
+  put('train',running?'暫停訓練':complete?'重新訓練':net?.epoch?'繼續訓練':'讓神經網路試試');
+  const progress='訓練進度 '+(net?.epoch||0).toLocaleString('zh-TW')+(imported?' / 1,500 輪':' / 10,000 輪');
+  put('trainingProgress',progress+(complete?(imported?'（採用驗證最佳權重）':'（已完成）'):''));
   const unit=preset.unit?' '+preset.unit:'';
   put('lrmse',linearError==null?'—':fmt(linearError,4)+unit);
   put('nrmse',networkError==null?'—':fmt(networkError,4)+unit);
   let message='先猜答案，再按「畫出預測直線」。';
   if(line) message='看看綠色短線：哪一筆最沒猜準？';
   if(networkError!=null) message='比較藍線和橘線：在哪些地方差最多？';
-  if(imported && points.length>=2) message='按資料順序顯示走勢。RMSE 以 '+points.filter(point=>point.test).length+' 筆測試資料計算。';
+  if(imported && points.length>=2) message='RMSE 以 '+points.filter(point=>point.test).length+' 筆測試資料計算。模型設定依較早的驗證資料決定。';
   if(points.length<2) message='先在圖上加入至少 2 個點。';
   put('message',notice||message);
   $('custom').disabled=!points.some(p=>p.custom);
@@ -787,9 +791,10 @@ function requestDraw(){if(!frame) frame=requestAnimationFrame(tick);}
 function tick(now){
   frame=0;
   if(running){
-    const start=performance.now(), rate=.02;
-    for(let i=0;i<25 && net.epoch<MAX_EPOCH;i++){
-      step(net,trainingData,rate);
+    const start=performance.now(), limit=imported?1500:MAX_EPOCH;
+    for(let i=0;i<25 && net.epoch<limit && running;i++){
+      if(imported) stepImportedNetwork();
+      else step(net,trainingData,.02);
       if(performance.now()-start>8) break;
     }
     if(!net.layers.every(layer=>layer.weights.every(Number.isFinite))){
@@ -797,7 +802,7 @@ function tick(now){
       running=false;
       notice='訓練已停止。請按「讓神經網路試試」重新訓練。';
     }
-    if(net.epoch>=MAX_EPOCH) running=false;
+    if(net.epoch>=limit) running=false;
   }
   if(motion&&now-motion.start>=400) motion=null;
   updateUi();
@@ -876,7 +881,7 @@ $('fit').onclick=()=>{notice='';linearOn=points.length>=2;refit(true);requestDra
 $('train').onclick=()=>{
   notice='';
   if(points.length>=2 && trainingData.length){
-    if(!net || net.epoch>=MAX_EPOCH) newNetwork();
+    if(!net || net.validation?.finished || net.epoch>=MAX_EPOCH) newNetwork();
     running=!running;
   }
   requestDraw();
@@ -1075,7 +1080,7 @@ function parseCustomData(text){
   });
   return {columns,rows};
 }
-function trainLinearFactors(rows,width){
+function trainLinearFactors(rows,width,penalty=0){
   const count=width+1, matrix=Array.from({length:count},()=>Array(count+1).fill(0));
   for(const row of rows){
     const features=[1,...row.x];
@@ -1084,6 +1089,7 @@ function trainLinearFactors(rows,width){
       matrix[i][count]+=features[i]*row.y;
     }
   }
+  for(let i=1;i<count;i++) matrix[i][i]+=penalty*rows.length;
   for(let i=0;i<count;i++){
     let pivot=i;
     for(let j=i+1;j<count;j++) if(Math.abs(matrix[j][i])>Math.abs(matrix[pivot][i])) pivot=j;
@@ -1119,12 +1125,51 @@ function rebuildImportedTraining(){
   trainingData=points.filter(point=>!point.test).map(({factors,y})=>({
     x:imported.normalize(factors),y:(y-imported.output.center)/imported.output.scale
   }));
+  imported.trainingSplit=validationSplit(trainingData);
+  if(net){
+    net=null;
+    if(running && trainingData.length) newNetwork();
+  }
   if(!trainingData.length) running=false;
 }
+function validationSplit(rows){
+  const count=rows.length;
+  const validationSize=count>3?Math.max(1,Math.floor(count*.2)):0;
+  return {fit:rows.slice(0,count-validationSize),validation:rows.slice(count-validationSize)};
+}
+function validationMse(rows,predictRow){
+  return rows.reduce((sum,row)=>sum+(predictRow(row.x)-row.y)**2,0)/rows.length;
+}
+function stepImportedNetwork(){
+  const {fit,validation}=imported.trainingSplit;
+  const state=net.validation;
+  step(net,fit,.004,.004);
+  if(net.epoch%10!==0 && net.epoch!==1) return;
+  const error=validationMse(validation.length?validation:fit,x=>predict(net,x));
+  if(error<state.best){
+    state.best=error;state.epoch=net.epoch;
+    state.weights=net.layers.map(layer=>layer.weights.slice());
+  }
+  if(net.epoch>=1500 || (validation.length && net.epoch-state.epoch>=220)){
+    if(state.weights) net.layers.forEach((layer,i)=>layer.weights.set(state.weights[i]));
+    state.finished=true;
+    running=false;
+  }
+}
 function fitImported(){
-  const fit=trainingData.length>customFactorCount()?trainLinearFactors(trainingData,customFactorCount()):null;
-  if(!fit && !notice) notice='訓練資料不足或因子共線，無法求得唯一的迴歸解。';
-  return fit && (point=>fit(imported.normalize(point.factors))*imported.output.scale+imported.output.center);
+  const width=customFactorCount(),{fit,validation}=imported.trainingSplit;
+  let penalty=.01,best=Infinity;
+  if(validation.length){
+    for(const candidate of [0,.001,.01,.05,.2,1]){
+      const model=trainLinearFactors(fit,width,candidate);
+      if(!model) continue;
+      const score=validationMse(validation,model);
+      if(score<best){best=score;penalty=candidate;}
+    }
+  }
+  const model=trainingData.length?trainLinearFactors(trainingData,width,penalty):null;
+  if(!model && !notice) notice='訓練資料不足，無法估計迴歸。';
+  return model && (point=>model(imported.normalize(point.factors))*imported.output.scale+imported.output.center);
 }
 function importedNetworkPrediction(point){
   if(!net?.epoch || !trainingData.length) return NaN;
@@ -1172,8 +1217,9 @@ function readCustomData(){
   catch(error){put('csvFeedback',error.message);return;}
   const {columns,rows}=data;
   const width=columns.length-1,train=rows.slice(0,rows.length-Math.ceil(rows.length*.25));
-  const ranges=Array.from({length:width},(_,i)=>fitRanges(train,i));
-  imported={columns,testBoundary:train.length+.5,output:fitRanges(train,width),
+  const fit=validationSplit(train).fit;
+  const ranges=Array.from({length:width},(_,i)=>fitRanges(fit,i));
+  imported={columns,testBoundary:train.length+.5,output:fitRanges(fit,width),
     normalize:values=>values.map((value,i)=>(value-ranges[i].center)/ranges[i].scale)};
   const {min,max}=fitRanges(rows,width),padding=(max-min||Math.max(Math.abs(min)*.1,1))*.12;
   preset={
