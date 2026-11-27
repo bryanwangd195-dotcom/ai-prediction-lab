@@ -74,16 +74,17 @@ h1,h2,h3{color:var(--heading)}.slide h2{color:#F5F7FA}.deck-player:focus-visible
 </aside></main>
 <div id="customLab" class="lab-workflow" hidden>
 <section class="panel"><h3>貼上資料，選擇預測目標與輸入因子</h3>
-<p>下方已填入模擬房價。第一列是欄名，接著每列是一筆資料。可直接貼上 Excel 的數值欄位，或貼逗號分隔的 CSV。資料與模型都留在這個頁面中。</p>
+<p>下方已填入一份可直接試跑的模擬資料。貼上自己的 Excel 數值欄位或 CSV 後，可以選任一欄作為預測目標。第一列填欄名，後面每列填一筆數值資料。資料與模型都留在這個頁面中。</p>
 <label for="csvInput">資料表</label><textarea id="csvInput" spellcheck="false"></textarea>
-<div class="lab-tools"><button id="readCsv" class="primary">讀取資料</button><button id="exampleCsv">還原房價範例</button></div>
+<div class="lab-tools"><button id="readCsv" class="primary">讀取資料</button><button id="exampleCsv">載入一般範例</button><button id="stockCsv">載入股價範例</button></div>
 <p id="csvFeedback" class="lab-feedback" role="status"></p>
-<div class="lab-fields"><label for="targetColumn">預測目標<select id="targetColumn"></select></label></div>
+<div class="lab-fields"><label for="targetColumn">預測目標<select id="targetColumn"></select></label><label for="splitMode">訓練與測試切分<select id="splitMode"><option value="random">固定隨機切分</option><option value="ordered">依列順序切分（較新資料做測試）</option></select></label></div>
+<p class="note">股價等時間資料請由舊到新排列。若要預測下一期，請事先把下一期目標值對齊到同一列，因子只放預測當下已知的資料。日期可保留在原始表；貼入實驗室時選數值欄。</p>
 <fieldset class="lab-factors" id="factorColumns"><legend>輸入因子（可複選）</legend></fieldset>
 <details><summary>預覽資料表</summary><div class="lab-table" id="csvPreview"></div></details>
 </section>
 <div class="lab-results">
-<section class="panel"><h3>比較結果｜實際值 vs. 預測值</h3><p id="sampleInfo" class="note"></p><p class="note">本區隨機留出測試資料，適合一般表格迴歸。依日期預測未來時，應另外按時間順序切分。</p>
+<section class="panel"><h3>比較結果｜實際值 vs. 預測值</h3><p id="comparisonTarget" class="note"></p><p id="sampleInfo" class="note"></p>
 <svg id="predictionPlot" class="lab-plot" viewBox="0 0 500 345" role="img" aria-label="模型在測試資料上的預測與實際值散佈圖"></svg>
 <div class="legend"><span class="blue"><i></i>迴歸模型</span><span class="orange"><i></i>類神經網路</span><span>虛線：預測等於實際值</span></div>
 <div class="scores"><div class="score blue"><small>迴歸模型 · 測試 RMSE</small><strong id="customLinearScore">—</strong></div><div class="score orange"><small>類神經網路 · 測試 RMSE</small><strong id="customNetworkScore">—</strong></div></div>
@@ -92,7 +93,7 @@ h1,h2,h3{color:var(--heading)}.slide h2{color:#F5F7FA}.deck-player:focus-visible
 <p id="customArchitecture" class="note"></p>
 <div class="lab-fields"><label for="customWidths">各隱藏層節點數（逗號分隔）<input id="customWidths" value="16, 8" inputmode="text"></label><label for="customActivation">激勵函數<select id="customActivation"><option>ReLU</option><option>Tanh</option><option>Sigmoid</option></select></label></div>
 <div class="lab-tools"><button id="customTrain" class="primary">訓練並比較</button></div><p id="customTraining" class="lab-feedback" role="status"></p></section>
-<section class="panel"><h3>輸入一筆新資料</h3><p class="note">用上方已訓練的模型估算這筆資料的目標值。</p>
+<section class="panel"><h3>輸入一筆新資料</h3><p class="note" id="predictionTarget">用上方已訓練的模型估算這筆資料的目標值。</p>
 <form id="predictForm"><div class="lab-fields" id="predictFields"></div><button id="customPredict" class="primary" disabled>比較預測</button></form>
 <p class="blue">迴歸模型：<strong id="customLinearValue">—</strong></p><p class="orange">類神經網路：<strong id="customNetworkValue">—</strong></p>
 <p id="predictWarning" class="lab-feedback" role="status"></p></section></div>
@@ -1011,13 +1012,24 @@ document.addEventListener('fullscreenchange',()=>{
   keepPromoVisible();
 });
 const exampleData=[
-  '坪數,屋齡,樓層,總價（萬元）',
+  '因子 A,因子 B,因子 C,目標值',
   ...Array.from({length:32},(_,i)=>{
-    const area=19+(i*11%33), age=2+(i*7%29), floor=1+(i*5%13);
-    const price=Math.round(190+area*37-age*12+floor*19+Math.max(0,area-33)*14+(i%5-2)*15);
-    return [area,age,floor,price].join(',');
+    const a=19+(i*11%33), b=2+(i*7%29), c=1+(i*5%13);
+    const target=Math.round(45+2*a-b+3*c+Math.max(0,a-33)*2+(i%5-2)*2);
+    return [a,b,c,target].join(',');
   })
 ].join('\n');
+const stockExample=(()=>{
+  const random=rng(927),rows=['當期收盤價,當期成交量,當期大盤指數,下一期收盤價'];
+  let price=96;
+  for(let i=0;i<36;i++){
+    const volume=Math.round(320+600*random()), market=Math.round(12000+35*i+250*(random()-.5));
+    const next=Math.round((price+.28+.002*(volume-600)+2*(random()-.5))*100)/100;
+    rows.push([price,volume,market,next].join(','));
+    price=next;
+  }
+  return rows.join('\n');
+})();
 let imported=null, experiment=null, customRun=0, customActive=false;
 $('csvInput').value=exampleData;
 function showPresetLab(){
@@ -1083,7 +1095,14 @@ function parseCustomData(text){
     [order[i],order[j]]=[order[j],order[i]];
   }
   const testSize=Math.max(2,Math.ceil(rows.length*.25));
-  return {columns,rows,train:order.slice(testSize).map(i=>rows[i]),test:order.slice(0,testSize).map(i=>rows[i])};
+  return {columns,rows,order,testSize};
+}
+function customSplit(){
+  const {rows,order,testSize}=imported;
+  if($('splitMode').value==='ordered'){
+    return {train:rows.slice(0,-testSize),test:rows.slice(-testSize)};
+  }
+  return {train:order.slice(testSize).map(i=>rows[i]),test:order.slice(0,testSize).map(i=>rows[i])};
 }
 function customMessage(id,message,error=false){
   $(id).dataset.error=String(error);
@@ -1164,7 +1183,12 @@ function buildPredictFields(){
     label.append(input);return label;
   }));
   updateArchitecture();
-  put('sampleInfo',imported?'同一份資料固定分組：'+imported.train.length+' 筆訓練，'+imported.test.length+' 筆測試（約 25%）。':'讀取資料後顯示固定測試集。');
+  const target=imported?.columns[+$('targetColumn').value];
+  put('comparisonTarget',target?'預測目標：'+target:'');
+  put('predictionTarget',target?'使用下方因子估算「'+target+'」。':'讀取資料後即可選擇預測目標。');
+  const split=imported?customSplit():null;
+  const splitLabel=$('splitMode').value==='ordered'?'依列順序（較舊訓練、較新測試）':'固定隨機切分';
+  put('sampleInfo',split?splitLabel+'：'+split.train.length+' 筆訓練，'+split.test.length+' 筆測試。':'讀取資料後顯示測試集。');
   updateCustomButton();
 }
 function resetCustomResults(){
@@ -1266,16 +1290,17 @@ function trainCustom(){
   if(!imported || !factors.length) return;
   try{
     const widths=customWidths();
-    if(imported.train.length<=factors.length) throw new Error('訓練筆數須多於因子數加上截距所需的筆數。請增加資料或減少因子。');
-    const ranges=factors.map(i=>fitRanges(imported.train,i)),output=fitRanges(imported.train,target);
+    const {train,test}=customSplit();
+    if(train.length<=factors.length) throw new Error('訓練筆數須多於因子數。請增加資料或減少因子。');
+    const ranges=factors.map(i=>fitRanges(train,i)),output=fitRanges(train,target);
     const normalize=values=>values.map((value,i)=>(value-ranges[i].center)/ranges[i].scale);
     const denormalize=value=>value*output.scale+output.center;
     const mapRow=row=>({x:factors.map(i=>row[i]),y:row[target]});
-    const training=imported.train.map(mapRow).map(({x,y})=>({x:normalize(x),y:(y-output.center)/output.scale}));
+    const training=train.map(mapRow).map(({x,y})=>({x:normalize(x),y:(y-output.center)/output.scale}));
     const linear=trainLinearFactors(training,factors.length);
     const network=initialize(widths,$('customActivation').value,rng(1129),factors.length);
     const state={
-      ranges,test:imported.test.map(mapRow),network,
+      ranges,test:test.map(mapRow),network,
       linear:linear?values=>denormalize(linear(normalize(values))):null,
       networkPredict:values=>denormalize(predict(network,normalize(values)))
     };
@@ -1300,7 +1325,13 @@ function trainCustom(){
 }
 $('myData').onclick=showCustomLab;
 $('readCsv').onclick=readCustomData;
-$('exampleCsv').onclick=()=>{$('csvInput').value=exampleData;readCustomData();};
+$('exampleCsv').onclick=()=>{$('csvInput').value=exampleData;$('splitMode').value='random';readCustomData();};
+$('stockCsv').onclick=()=>{
+  $('csvInput').value=stockExample;
+  $('splitMode').value='ordered';
+  readCustomData();
+  customMessage('csvFeedback','已載入模擬股價。每列以當期資料預測下一期收盤價，測試集取最後 9 筆。');
+};
 $('csvInput').oninput=()=>{
   imported=null;resetCustomResults();
   $('targetColumn').replaceChildren();
@@ -1310,6 +1341,7 @@ $('csvInput').oninput=()=>{
   customMessage('csvFeedback','資料已變更，按「讀取資料」後更新。');
 };
 $('targetColumn').onchange=buildFactors;
+$('splitMode').onchange=buildPredictFields;
 $('customWidths').oninput=()=>{resetCustomResults();updateArchitecture();};
 $('customActivation').onchange=resetCustomResults;
 $('customTrain').onclick=trainCustom;
